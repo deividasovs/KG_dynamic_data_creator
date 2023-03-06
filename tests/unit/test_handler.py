@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from hello_world import app
+from dynamic_data_creator import app
 
 
 @pytest.fixture()
