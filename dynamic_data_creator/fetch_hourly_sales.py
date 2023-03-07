@@ -1,15 +1,12 @@
-import csv
-
-import calendar
-from datetime import datetime, timedelta
-
+from datetime import datetime
 from botocore.config import Config
-
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
-import pandas
+import pandas as pd
+
+from data_manager import DataManager
 
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -19,18 +16,12 @@ DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 # 7 = Nassau Street
 location_id = "7"
 
-# TODO: First and last days of each month not being added to data for some reason
-
-opening_time = 9  # incl
+opening_time = 10  # incl
 closing_time = 19  # not incl
-
-# Start & end values not included for some reason
-start_date_str = "2022-12-01T00:00:00.000"
-end_date_str = "2023-01-01T00:00:00.000"
 
 
 def get_time_range_list(start_date, end_date):
-    return pandas.date_range(start_date, end_date, freq='d').date.tolist()
+    return pd.date_range(start_date, end_date, freq='d').date.tolist()
 
 
 def query_dynamodb(table, pk, sk1, sk2, loc_id):
@@ -63,7 +54,8 @@ def query_dynamodb(table, pk, sk1, sk2, loc_id):
         raise
 
 
-def main():
+# Start & end values not included for some reason
+def main(start_date_str, end_date_str):
 
     my_config = Config(
         region_name='eu-west-1',
@@ -92,17 +84,10 @@ def main():
             partition_key = f'TRA#{date_ranges[dIndex+1].strftime("%Y-%m")}'
         else:
             partition_key = f'TRA#{date_ranges[dIndex].strftime("%Y-%m")}'
-        """
-        print(date_ranges[dIndex+1])
-        print(partition_key)
-        print(sort_key_start)
-        print(sort_key_end)
-        """
 
         transactions = query_dynamodb(
             table, partition_key, sort_key_start, sort_key_end, location_id)
 
-        # TODO, remove item from list once we've added it to total
         for i in range(opening_time, closing_time):
             total_hourly_sales = 0
             transaction_count = 0
@@ -133,33 +118,38 @@ def main():
 
             final_result.append(hourly_sales)
 
-    return final_result
+    return to_dataset(final_result)
 
 
-def to_csv(data):
+def to_dataset(data):
     headings = ["timestamp", "subtotal", "transaction_count"]
 
-    print("exporting to csv...")
-
-    # data_file = open('./Data/NewDecemberSales.csv', 'w')
-    # csv_writer = csv.writer(data_file)
-
-    # csv_writer.writerow(headings)
+    df = pd.DataFrame(columns=headings)
 
     for d in data:
-        # Writing data of CSV file
-        # has to be wrapped in list or else returns dict_key object
         header = list(d.keys())
 
         v = list(d.values())
 
-        val_to_print = [header[0], v[0]['subtotal'], v[0]['transaction_count']]
+        transaction_row = [header[0], v[0]
+                           ['subtotal'], v[0]['transaction_count']]
 
-        # csv_writer.writerow(val_to_print)
-        print(val_to_print)
+        df2 = pd.DataFrame(columns=headings, data=[transaction_row])
 
-    # data_file.close()
+        df = pd.concat([df, df2])
+
+    return df
 
 
-data = main()
-to_csv(data)
+if __name__ == "__main__":
+    start_date_str = "2022-12-01T00:00:00.000"
+    end_date_str = "2023-01-01T00:00:00.000"
+
+    salesData = main(start_date_str, end_date_str)
+    DataManager.add_to_dataset('timestamp', salesData['timestamp'])
+    DataManager.add_to_dataset('subtotal', salesData['subtotal'])
+    DataManager.add_to_dataset(
+        'transaction_count', salesData['transaction_count'])
+    DataManager.print_dataset()
+
+    # print(salesData)
