@@ -11,7 +11,7 @@ weather_data = weatherData.WeatherData()
 
 async def fetch_historical_data():
     """Fetch data from API - (current weather and forecast)."""
-    await weather_data.fetching_data()
+    await weather_data.fetch_data()
 
     date = datetime.datetime.now(pytz.utc).replace(
         minute=0, second=0, microsecond=0)
@@ -22,9 +22,9 @@ async def fetch_historical_data():
 
 
 async def fetch_forecasts(days_to_forecast=7):
-    await weather_data.fetching_data()
+    await weather_data.fetch_data()
     today = datetime.datetime.now(pytz.utc).replace(
-        hour=10, minute=0, second=0, microsecond=0)
+        hour=10, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
 
     # Add 1 hour to times until hitting 5 o clock, then incremenet the day
     times = []
@@ -55,7 +55,7 @@ def extract_relevant_weather(weatherJson):
 
 async def main():
     await fetch_historical_data()
-    # await fetch_data()
+    await fetch_forecasts()
     await weather_data.close_session()
 
 if __name__ == "__main__":

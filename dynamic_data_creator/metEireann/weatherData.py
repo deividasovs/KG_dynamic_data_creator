@@ -1,3 +1,5 @@
+# Adapted from https://github.com/DylanGore/PyMetEireann
+
 '''Library to handle communications with the Met Éireann forecast and weather warning APIs.'''
 import asyncio
 import datetime
@@ -73,21 +75,10 @@ _LOGGER = logging.getLogger(__name__)
 class WeatherData:
     '''Representation of Met Éireann weather data.'''
 
-    def __init__(self, websession=None, api_url=API_URL, latitude=54.7210798611, longitude=-8.7237392806, altitude=0):
+    def __init__(self, websession=None):
         '''Initialize the weather object.'''
-        # pylint: disable=too-many-arguments
 
-        # Get the current UTC time
-        now = datetime.datetime.utcnow()
-
-        # take away a day from now
-#        now = now - datetime.timedelta(days=1)
-
-        # Store the forecast parameters
-        self._api_url = f'{api_url}?lat={latitude};long={longitude};alt={altitude};from={now.date()}T{now.hour}:00'
-        # self._api_url = f'{api_url}?lat={latitude};long={longitude};alt={altitude};'
-
-        print(self._api_url)
+        self.build_api()
 
         # Create a new session if one isn't passed in
         if websession is None:
@@ -102,12 +93,12 @@ class WeatherData:
             self.created_session = False
         self.data = None
 
-    def build_api(startTime, endTime, api_url=API_URL, latitude=54.7210798611, longitude=-8.7237392806, altitude=0):
+    def build_api(self, startTime=datetime.datetime.utcnow(), endTime=datetime.datetime.utcnow(), api_url=API_URL, latitude=54.7210798611, longitude=-8.7237392806, altitude=0):
         '''Build the API URL'''
-        return f'{api_url}?lat={latitude};long={longitude};alt={altitude};from={startTime}T:00;to?{endTime}'
+        self._api_url = f'{api_url}?lat={latitude};long={longitude};alt={altitude};from={startTime}T:00;to?{endTime}'
 
-    async def fetching_data(self, *_):
-        '''Get the latest data from the API'''
+    async def fetch_data(self):
+        '''Get data from the API'''
         try:
             with async_timeout.timeout(10):
                 resp = await self._websession.get(self._api_url)
@@ -163,7 +154,8 @@ class WeatherData:
             valid_to = parse_datetime(time_entry['@to'])
 
             if time > valid_to:
-                print(time + ' is after ' + valid_to)
+                # print(time)
+                # print(valid_to)
                 # Has already passed. Never select this.
                 continue
 
