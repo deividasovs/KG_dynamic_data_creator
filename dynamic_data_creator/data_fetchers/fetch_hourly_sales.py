@@ -118,7 +118,7 @@ def fetch_hourly_sales(start_date_str, end_date_str):
 
 
 def to_dataset(data):
-    headings = ["timestamp", "subtotal", "transaction_count"]
+    headings = ["Timestamp", "subtotal", "transaction_count"]
 
     df = pd.DataFrame(columns=headings)
 

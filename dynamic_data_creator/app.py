@@ -8,6 +8,7 @@ from data_manager import DataManager
 from data_fetchers.fetch_oil import fetch_oil_data
 from data_fetchers.fetch_weather import fetch_historical_weather, fetch_forecasts
 from data_fetchers.fetch_hourly_sales import fetch_hourly_sales
+from interpolate_staff import add_staff
 
 
 def lambda_handler(event, context):
@@ -65,7 +66,18 @@ async def main():
     DataManager.add_to_dataset(
         'transaction_count', salesdf['transaction_count'])
 
-    weather_forecast_df['timestamp'] = weather_forecast_df['timestamp'].dt.tz_localize(
+    staff_data = add_staff()
+
+    DataManager.add_to_dataset(
+        'workforce_type_1', staff_data['workforce_type_1'])
+    DataManager.add_to_dataset(
+        'workforce_type_2', staff_data['workforce_type_2'])
+    DataManager.add_to_dataset(
+        'workforce_type_3', staff_data['workforce_type_3'])
+    DataManager.add_to_dataset(
+        'workforce_type_4', staff_data['workforce_type_4'])
+
+    weather_forecast_df['Timestamp'] = weather_forecast_df['Timestamp'].dt.tz_localize(
         None)
     DataManager.extend_column(
         ['Timestamp', 'rain', 'temperature'], weather_forecast_df)
@@ -73,7 +85,7 @@ async def main():
     DataManager.fill_na()
 
     DataManager.export_to_csv()
-    DataManager.print_dataset()
+    # DataManager.print_dataset()
 
     lambda_handler(None, None)
 

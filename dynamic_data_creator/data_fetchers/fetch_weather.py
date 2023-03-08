@@ -53,13 +53,13 @@ async def fetch_forecasts(days_to_forecast=7):
 
 # Re-write to use the meteostat API
 def extract_relevant_weather_from_met(weather_json):
-    df = pd.DataFrame(columns=["timestamp", "temperature", "rain"])
+    df = pd.DataFrame(columns=["Timestamp", "temperature", "rain"])
 
     for i, weather in enumerate(weather_json):
         if weather is not None:
             # print(weather)
             new_df = pd.DataFrame({
-                "timestamp": [weather["datetime"]],
+                "Timestamp": [weather["datetime"]],
                 "temperature": [weather["temperature"]],
                 "rain": [weather["precipitation"]]
             })
@@ -76,18 +76,18 @@ def extract_relevant_weather_from_met(weather_json):
 
 
 def extract_relevant_weather_from_meteostat(weather_df):
-    df = pd.DataFrame(columns=["timestamp", "temperature", "rain"])
+    df = pd.DataFrame(columns=["Timestamp", "temperature", "rain"])
 
     weather_df = pd.DataFrame(weather_df)
 
     df["temperature"] = weather_df["temp"]
     df["rain"] = weather_df["prcp"]
-    df["timestamp"] = weather_df.index
+    df["Timestamp"] = weather_df.index
 
     # reset the index
     df = df.reset_index(drop=True)
 
-    df = df[df["timestamp"].dt.hour.between(10, 18)]
+    df = df[df["Timestamp"].dt.hour.between(10, 18)]
     df = df.reset_index()
 
     return df
