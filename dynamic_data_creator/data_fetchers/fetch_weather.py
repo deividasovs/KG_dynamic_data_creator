@@ -1,4 +1,5 @@
 import meteireann
+import datetime as dt
 import asyncio
 import datetime
 import pytz
@@ -6,31 +7,39 @@ from meteostat import Hourly, Stations, Point
 
 import pandas as pd
 
-weather_data = meteireann.WeatherData()
+from common.helper_fns import parse_date
 
+weather_data = meteireann.WeatherData()
 
 # Fantastic weather API -> https://meteostat.net/en/place/ie/dublin?s=03969&t=2023-02-21/2023-02-28
 
 # TODO: Make sure to also include todays weather!
 
-async def fetch_historical_data(startTime, endTime):
-    # Have to use a diffenent API to fetch historical data, met doesnt provide it
+
+async def fetch_historical_weather(start_date, end_date):
+    # Add a day to start_date
+    # start_date = start_date + datetime.timedelta(days=1)
+    # end_date = end_date + datetime.timedelta(days=1)
+
+    start_date, end_date = parse_date(start_date), parse_date(end_date)
+    # Have to use a different API to fetch historical data, met doesn't provide it
     stations = Stations()
     stations = stations.nearby(53.34, -6.25)
     station = stations.fetch(1)
 
-    data = Hourly(station, startTime, endTime)
+    data = Hourly(station, start_date, end_date)
     data = data.fetch()
 
     return extract_relevant_weather_from_meteostat(data)
 
 
 async def fetch_forecasts(days_to_forecast=7):
+
     await weather_data.fetching_data()
     today = datetime.datetime.now(pytz.utc).replace(
         hour=10, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
 
-    # Add 1 hour to times until hitting 5 o clock, then incremenet the day
+    # Add 1 hour to times until hitting 5 o clock, then increment the day
     times = []
     for i in range(0, days_to_forecast):
         for h in range(10, 18):
@@ -42,18 +51,18 @@ async def fetch_forecasts(days_to_forecast=7):
 
 
 # Re-write to use the meteostat API
-def extract_relevant_weather_from_met(weatherJson):
+def extract_relevant_weather_from_met(weather_json):
     df = pd.DataFrame(columns=["timestamp", "temperature", "rain"])
 
-    for i in range(0, len(weatherJson)):
-        weather = weatherJson[i]
+    for i, weather in enumerate(weather_json):
         if weather is not None:
-            print(weather)
-            df = df.append({
-                "timestamp": weather["datetime"],
-                "temperature": weather["temperature"],
-                "rain": weather["precipitation"]
-            }, ignore_index=True)
+            # print(weather)
+            new_df = pd.DataFrame({
+                "timestamp": [weather["datetime"]],
+                "temperature": [weather["temperature"]],
+                "rain": [weather["precipitation"]]
+            })
+            df = pd.concat([df, new_df], ignore_index=True)
 
     # interpolate any nan temperatures, stick to 1 decimal place
     df["temperature"] = df["temperature"].interpolate().round(1)
@@ -61,14 +70,14 @@ def extract_relevant_weather_from_met(weatherJson):
     return df
 
 
-def extract_relevant_weather_from_meteostat(weatherDf):
+def extract_relevant_weather_from_meteostat(weather_df):
     df = pd.DataFrame(columns=["timestamp", "temperature", "rain"])
 
-    weatherDf = pd.DataFrame(weatherDf)
+    weather_df = pd.DataFrame(weather_df)
 
-    df["temperature"] = weatherDf["temp"]
-    df["rain"] = weatherDf["prcp"]
-    df["timestamp"] = weatherDf.index
+    df["temperature"] = weather_df["temp"]
+    df["rain"] = weather_df["prcp"]
+    df["timestamp"] = weather_df.index
 
     # reset the index
     df = df.reset_index(drop=True)
@@ -79,10 +88,10 @@ def extract_relevant_weather_from_meteostat(weatherDf):
 
 
 async def main():
-    startTime = datetime.datetime(2023, 1, 1)
-    endTime = datetime.datetime(2023, 1, 10)
+    start_date = datetime.datetime(2023, 1, 1)
+    end_date = datetime.datetime(2023, 1, 10)
 
-    historical_data = await fetch_historical_data(startTime, endTime)
+    historical_data = await fetch_historical_weather(start_date, end_date)
     forecasted_data = await fetch_forecasts()
 
     print(forecasted_data)

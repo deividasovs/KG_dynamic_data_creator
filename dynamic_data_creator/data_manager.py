@@ -1,5 +1,4 @@
 # Singleton object managing the dataset
-
 import pandas as pd
 
 
@@ -14,13 +13,21 @@ class DataManager(object):
             class_._instance = object.__new__(class_, *args, **kwargs)
         return class_._instance
 
-    def add_to_dataset(column, newData):
-        DataManager.dataset[column] = newData
+    def add_to_dataset(column, new_data):
+        DataManager.dataset[column] = new_data
+
+    def extend_column(columns, new_rows):
+        # add a row to the dataset
+        df = pd.DataFrame(new_rows, columns=columns)
+
+        DataManager.dataset = pd.concat(
+            [DataManager.dataset, new_rows], ignore_index=True)
+
+    def reset_index():
+        DataManager.dataset.reset_index(inplace=True)
+
+    def export_to_csv():
+        DataManager.dataset.to_csv("dataset.csv")
 
     def print_dataset():
         print(DataManager.dataset)
-
-
-# Sample data format after squashing:
-# Timestamp	subtotal	transaction_count	rain	temperature	holiday	oil_price	workforce_type_1	workforce_type_2	workforce_type_3	workforce_type_4
-# 17/05/2021 10:00	428.03	11	0	12.7	FALSE	69.62	1	2	3	0

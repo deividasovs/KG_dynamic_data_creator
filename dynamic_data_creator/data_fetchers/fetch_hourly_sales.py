@@ -3,13 +3,10 @@ from botocore.config import Config
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
-
 import pandas as pd
 
 from data_manager import DataManager
-
-TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
-DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+from common.helper_fns import parse_date
 
 # 19 = website
 # 5 = RSY - The Kilkenny Shop - Killarney
@@ -55,7 +52,7 @@ def query_dynamodb(table, pk, sk1, sk2, loc_id):
 
 
 # Start & end values not included for some reason
-def main(start_date_str, end_date_str):
+def fetch_hourly_sales(start_date_str, end_date_str):
 
     my_config = Config(
         region_name='eu-west-1',
@@ -66,8 +63,7 @@ def main(start_date_str, end_date_str):
     table = dynamodb.Table('opsuitestaging')
 
     # start date day not included in time range
-    start_date = datetime.strptime(str(start_date_str), TIME_FORMAT)
-    end_date = datetime.strptime(str(end_date_str), TIME_FORMAT)
+    start_date, end_date = parse_date(start_date_str), parse_date(end_date_str)
 
     total_hourly_sales = 0
     date_ranges = get_time_range_list(start_date, end_date)
@@ -139,17 +135,3 @@ def to_dataset(data):
         df = pd.concat([df, df2])
 
     return df
-
-
-if __name__ == "__main__":
-    start_date_str = "2022-12-01T00:00:00.000"
-    end_date_str = "2023-01-01T00:00:00.000"
-
-    salesData = main(start_date_str, end_date_str)
-    DataManager.add_to_dataset('timestamp', salesData['timestamp'])
-    DataManager.add_to_dataset('subtotal', salesData['subtotal'])
-    DataManager.add_to_dataset(
-        'transaction_count', salesData['transaction_count'])
-    DataManager.print_dataset()
-
-    # print(salesData)

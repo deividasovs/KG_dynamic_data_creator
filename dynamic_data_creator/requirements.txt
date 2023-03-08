@@ -1,1 +1,6 @@
 requests
+yfinance
+meteireann
+asyncio
+pytz
+meteostat 
