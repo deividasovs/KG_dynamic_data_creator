@@ -134,4 +134,5 @@ def to_dataset(data):
 
         df = pd.concat([df, df2])
 
+    df = df.reset_index()
     return df

@@ -45,46 +45,37 @@ def create_date():
 
 async def main():
     start_date, end_date = create_date()
-    """
+
+    weather_history_df = await fetch_historical_weather(start_date, end_date)
+
+    oil_df = fetch_oil_data(start_date, end_date)
+
     salesdf = fetch_hourly_sales(start_date, end_date)
 
-    DataManager.add_to_dataset('timestamp', salesdf['timestamp'])
+    weather_forecast_df = await fetch_forecasts()
+
+    # oil_df.to_csv('OIL.csv', index=False)
+
+    DataManager.add_to_dataset('Timestamp', weather_history_df['Timestamp'])
+    DataManager.add_to_dataset('rain', weather_history_df['rain'])
+    DataManager.add_to_dataset(
+        'temperature', weather_history_df['temperature'])
+    DataManager.add_to_dataset('oil_price', oil_df['oil_price'])
     DataManager.add_to_dataset('subtotal', salesdf['subtotal'])
     DataManager.add_to_dataset(
         'transaction_count', salesdf['transaction_count'])
 
-    DataManager.reset_index()
-
-    oil_df = fetch_oil_data(start_date, end_date)
-
-    # oil_df.to_csv('OIL.csv', index=False)
-
-    DataManager.add_to_dataset('oil_price', oil_df['oil_price'])
-
-    weather_history_df = await fetch_historical_weather(start_date, end_date)
-
-    DataManager.add_to_dataset('rain', weather_history_df['rain'])
-    DataManager.add_to_dataset(
-        'temperature', weather_history_df['temperature'])
-    """
-
-    weather_forecast_df = await fetch_forecasts()
-
     weather_forecast_df['timestamp'] = weather_forecast_df['timestamp'].dt.tz_localize(
         None)
-
     DataManager.extend_column(
-        ['timestamp', 'rain', 'temperature'], weather_forecast_df)
+        ['Timestamp', 'rain', 'temperature'], weather_forecast_df)
 
-    # export weather history to csv
-    # weather_history_df.to_csv('weather_history.csv', index=False
+    DataManager.fill_na()
 
-    # export data
     DataManager.export_to_csv()
-    # DataManager.print_dataset()
+    DataManager.print_dataset()
 
     lambda_handler(None, None)
-
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

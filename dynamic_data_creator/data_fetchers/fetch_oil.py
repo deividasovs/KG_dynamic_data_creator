@@ -23,6 +23,10 @@ def create_dataframe(start_date, end_date):
 
 def fetch_oil_data(start_date, end_date):
     start_date, end_date = parse_date(start_date), parse_date(end_date)
+
+    start_date = start_date + dt.timedelta(days=1)
+    end_date = end_date + dt.timedelta(days=1)
+
     df = create_dataframe(start_date, end_date)
 
     ticker_symbol = 'BZ=F'
@@ -39,7 +43,7 @@ def fetch_oil_data(start_date, end_date):
         df.loc[df['timestamp'].dt.date == closing_prices.index[i].date(),
                'oil_price'] = closing_prices[i]
 
-    # interpolate nan oil price values
-    df["oil_price"] = df["oil_price"].interpolate()
+    df = df.interpolate(method='bfill').round(2)
+    df = df.reset_index()
 
     return df

@@ -21,7 +21,14 @@ class DataManager(object):
         df = pd.DataFrame(new_rows, columns=columns)
 
         DataManager.dataset = pd.concat(
-            [DataManager.dataset, new_rows], ignore_index=True)
+            [DataManager.dataset, df], ignore_index=True)
+
+    def get_dataset():
+        return DataManager.dataset
+
+    # Na values used for TFT encoder to work
+    def fill_na():
+        DataManager.dataset = DataManager.dataset.fillna(0)
 
     def reset_index():
         DataManager.dataset.reset_index(inplace=True)

@@ -18,10 +18,11 @@ weather_data = meteireann.WeatherData()
 
 async def fetch_historical_weather(start_date, end_date):
     # Add a day to start_date
-    # start_date = start_date + datetime.timedelta(days=1)
-    # end_date = end_date + datetime.timedelta(days=1)
 
     start_date, end_date = parse_date(start_date), parse_date(end_date)
+
+    start_date = start_date + datetime.timedelta(days=1)
+    end_date = end_date + datetime.timedelta(days=2)
     # Have to use a different API to fetch historical data, met doesn't provide it
     stations = Stations()
     stations = stations.nearby(53.34, -6.25)
@@ -67,6 +68,10 @@ def extract_relevant_weather_from_met(weather_json):
     # interpolate any nan temperatures, stick to 1 decimal place
     df["temperature"] = df["temperature"].interpolate().round(1)
 
+    print(df)
+
+    df = df.reset_index()
+
     return df
 
 
@@ -83,6 +88,7 @@ def extract_relevant_weather_from_meteostat(weather_df):
     df = df.reset_index(drop=True)
 
     df = df[df["timestamp"].dt.hour.between(10, 18)]
+    df = df.reset_index()
 
     return df
 
