@@ -2,20 +2,20 @@ import datetime as dt
 import asyncio
 
 from common.consts import DATE_FORMAT
+from common.helper_fns import create_date
 
 from data_manager import DataManager
 from data_fetchers.fetch_oil import fetch_oil_data
-from get_holidays import get_holidays
+from data_adders.add_holidays import add_holidays
+from data_adders.add_staff import add_staff
 from data_fetchers.fetch_weather import fetch_historical_weather, fetch_forecasts
 from data_fetchers.fetch_hourly_sales import fetch_hourly_sales
-from interpolate_staff import add_staff
 
 
 # Minimum encoder value = max_encoder_length = 9*60 //2 (~ 1 month / so do 31 days)
 
 # max_prediction_length = 9*7  # How many datapoints will be predicted (~1 week)
 # max_encoder_length = 9*60  # Determines the look back period (~2 months)
-
 
 def lambda_handler(event, context):
 
@@ -35,21 +35,6 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json',
         }
     }
-
-
-def create_date():
-    start_date = (dt.datetime.today() -
-                  dt.timedelta(days=60)).replace(hour=0, minute=0, second=0)
-
-    start_date = start_date.strftime(
-        DATE_FORMAT)
-
-    end_date = (dt.datetime.today() - dt.timedelta(days=1)
-                ).replace(hour=0, minute=0, second=0)
-
-    end_date = end_date.strftime(DATE_FORMAT)
-
-    return start_date, end_date
 
 
 async def create_dataset():
@@ -89,7 +74,7 @@ async def create_dataset():
     DataManager.extend_column(
         ['Timestamp', 'rain', 'temperature'], weather_forecast_df)
 
-    hols = get_holidays()
+    hols = add_holidays()
 
     # todo: Add time_idx
     DataManager.add_to_dataset("holiday", hols)

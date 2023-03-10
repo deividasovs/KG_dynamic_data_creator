@@ -7,7 +7,7 @@ irl_holidays = holidays.Ireland()
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def get_holidays():
+def add_holidays():
     hols = pd.DataFrame(columns=['holiday'])
     for index, row in DataManager.get_dataset().iterrows():
 
