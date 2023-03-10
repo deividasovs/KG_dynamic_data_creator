@@ -1,17 +1,19 @@
 
 # %%from datetime import datetime, timedelta
-from scipy.interpolate import interp1d
 import numpy as np
 import pandas as pd
 import math
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from data_manager import DataManager
 from datetime import datetime
 
 
 def add_staff():
     df = DataManager.get_dataset()[:540]
+    # baseline_df = pd.read_csv('./dynamic_data_creator/baseline_staff.csv') # Use when running code from __main__
+    # Use when running local api
     baseline_df = pd.read_csv('./baseline_staff.csv')
+
     # Find the day with the lowest transaction_count in both years
     # This was already found when setting the initial baseline
     lowest_transaction_count = 90

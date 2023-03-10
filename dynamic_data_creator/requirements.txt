@@ -1,6 +1,8 @@
 requests
 yfinance
-meteireann
-asyncio
+pymeteireann
 pytz
 meteostat 
+numpy
+pandas
+holidays

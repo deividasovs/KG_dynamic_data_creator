@@ -6,26 +6,30 @@ from common.consts import DATE_FORMAT
 
 from data_manager import DataManager
 from data_fetchers.fetch_oil import fetch_oil_data
+from get_holidays import get_holidays
 from data_fetchers.fetch_weather import fetch_historical_weather, fetch_forecasts
 from data_fetchers.fetch_hourly_sales import fetch_hourly_sales
 from interpolate_staff import add_staff
 
 
 def lambda_handler(event, context):
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
 
-    #     raise e
+    # new_dataset = create_dataset()
+    loop = asyncio.get_event_loop()
+    new_dataset = loop.run_until_complete(create_dataset())
+
+    # convert new_dataset to json
+    new_dataset_json = new_dataset.to_json()
 
     return {
         "statusCode": 200,
-        "body": json.dumps({
-            "message": "hello world",
-            # "location": ip.text.replace("\n", "")
-        }),
+        "body": new_dataset_json,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token, X-Amz-User-Agent',
+            'Content-Type': 'application/json',
+        }
     }
 
 
@@ -44,7 +48,7 @@ def create_date():
     return start_date, end_date
 
 
-async def main():
+async def create_dataset():
     start_date, end_date = create_date()
 
     weather_history_df = await fetch_historical_weather(start_date, end_date)
@@ -55,12 +59,11 @@ async def main():
 
     weather_forecast_df = await fetch_forecasts()
 
-    # oil_df.to_csv('OIL.csv', index=False)
-
     DataManager.add_to_dataset('Timestamp', weather_history_df['Timestamp'])
     DataManager.add_to_dataset('rain', weather_history_df['rain'])
     DataManager.add_to_dataset(
         'temperature', weather_history_df['temperature'])
+
     DataManager.add_to_dataset('oil_price', oil_df['oil_price'])
     DataManager.add_to_dataset('subtotal', salesdf['subtotal'])
     DataManager.add_to_dataset(
@@ -82,16 +85,22 @@ async def main():
     DataManager.extend_column(
         ['Timestamp', 'rain', 'temperature'], weather_forecast_df)
 
+    hols = get_holidays()
+
+    # todo: Add time_idx
+    DataManager.add_to_dataset("holiday", hols)
+
     DataManager.fill_na()
 
-    DataManager.export_to_csv()
+    # DataManager.export_to_csv()
     # DataManager.print_dataset()
 
-    lambda_handler(None, None)
+    return DataManager.get_dataset()
+
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    res = lambda_handler(None, None)
+    print(res)
 
 
 # Sample data format after squashing:

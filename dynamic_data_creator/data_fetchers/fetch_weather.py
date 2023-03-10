@@ -68,7 +68,7 @@ def extract_relevant_weather_from_met(weather_json):
     # interpolate any nan temperatures, stick to 1 decimal place
     df["temperature"] = df["temperature"].interpolate().round(1)
 
-    print(df)
+    # print(df)
 
     df = df.reset_index()
 
