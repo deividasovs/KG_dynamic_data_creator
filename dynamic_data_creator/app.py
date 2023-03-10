@@ -1,4 +1,3 @@
-import json
 import datetime as dt
 import asyncio
 
@@ -12,9 +11,14 @@ from data_fetchers.fetch_hourly_sales import fetch_hourly_sales
 from interpolate_staff import add_staff
 
 
+# Minimum encoder value = max_encoder_length = 9*60 //2 (~ 1 month / so do 31 days)
+
+# max_prediction_length = 9*7  # How many datapoints will be predicted (~1 week)
+# max_encoder_length = 9*60  # Determines the look back period (~2 months)
+
+
 def lambda_handler(event, context):
 
-    # new_dataset = create_dataset()
     loop = asyncio.get_event_loop()
     new_dataset = loop.run_until_complete(create_dataset())
 
@@ -101,14 +105,3 @@ async def create_dataset():
 if __name__ == "__main__":
     res = lambda_handler(None, None)
     print(res)
-
-
-# Sample data format after squashing:
-# Timestamp	subtotal	transaction_count	rain	temperature	holiday	oil_price	workforce_type_1	workforce_type_2	workforce_type_3	workforce_type_4
-# 17/05/2021 10:00	428.03	11	0	12.7	FALSE	69.62	1	2	3	0
-
-
-# Minimum encoder value = max_encoder_length = 9*60 //2 (~ 1 month / so do 31 days)
-
-# max_prediction_length = 9*7  # How many datapoints will be predicted (~1 week)
-# max_encoder_length = 9*60  # Determines the look back period (~2 months)
