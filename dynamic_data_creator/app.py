@@ -6,8 +6,8 @@ from common.helper_fns import create_date
 
 from data_manager import DataManager
 from data_fetchers.fetch_oil import fetch_oil_data
-from data_adders.add_holidays import add_holidays
-from data_adders.add_staff import add_staff
+from static_data_getter.get_holidays import get_holidays
+from static_data_getter.get_staff import get_staff
 from data_fetchers.fetch_weather import fetch_historical_weather, fetch_forecasts
 from data_fetchers.fetch_hourly_sales import fetch_hourly_sales
 
@@ -58,7 +58,7 @@ async def create_dataset():
     DataManager.add_to_dataset(
         'transaction_count', salesdf['transaction_count'])
 
-    staff_data = add_staff()
+    staff_data = get_staff()
 
     DataManager.add_to_dataset(
         'workforce_type_1', staff_data['workforce_type_1'])
@@ -74,7 +74,7 @@ async def create_dataset():
     DataManager.extend_column(
         ['Timestamp', 'rain', 'temperature'], weather_forecast_df)
 
-    hols = add_holidays()
+    hols = get_holidays()
 
     # todo: Add time_idx
     DataManager.add_to_dataset("holiday", hols)

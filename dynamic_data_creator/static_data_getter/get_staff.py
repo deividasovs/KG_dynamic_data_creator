@@ -1,11 +1,10 @@
 
 import pandas as pd
 import math
-# import matplotlib.pyplot as plt
 from data_manager import DataManager
 
 
-def add_staff():
+def get_staff():
     df = DataManager.get_dataset()[:540]
     # baseline_df = pd.read_csv('./dynamic_data_creator/baseline_staff.csv') # Use when running code from __main__
     # Use when running local api
