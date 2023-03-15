@@ -3,7 +3,7 @@ import datetime as dt
 import asyncio
 import datetime
 import pytz
-from meteostat import Hourly, Stations, Point
+from meteostat import Hourly, Stations
 
 import pandas as pd
 
@@ -23,8 +23,13 @@ async def fetch_historical_weather(start_date, end_date):
 
     start_date = start_date + datetime.timedelta(days=1)
     end_date = end_date + datetime.timedelta(days=2)
+
     # Have to use a different API to fetch historical data, met doesn't provide it
+    Stations.max_age = 0
+    Hourly.max_age = 0
+
     stations = Stations()
+
     stations = stations.nearby(53.34, -6.25)
     station = stations.fetch(1)
 

@@ -17,8 +17,9 @@ from data_fetchers.fetch_hourly_sales import fetch_hourly_sales
 # max_prediction_length = 9*7  # How many datapoints will be predicted (~1 week)
 # max_encoder_length = 9*60  # Determines the look back period (~2 months)
 
-def lambda_handler(event, context):
+# This is run every Sunday to generate the Data and forecasts for the next week
 
+def lambda_handler(event, context):
     loop = asyncio.get_event_loop()
     new_dataset = loop.run_until_complete(create_dataset())
 
@@ -76,7 +77,6 @@ async def create_dataset():
 
     hols = get_holidays()
 
-    # todo: Add time_idx
     DataManager.add_to_dataset("holiday", hols)
 
     DataManager.fill_na()
